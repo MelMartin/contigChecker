@@ -2,6 +2,7 @@ package contigChecker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 public class contigChecker {
@@ -36,6 +37,9 @@ public class contigChecker {
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			System.out.println("UnsupportedEncodingException");
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
