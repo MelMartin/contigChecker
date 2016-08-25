@@ -13,26 +13,38 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Scanner;
 
 public class checkedContigs {
 
-	File tempCandidateContigFile ;//contigsChecked.txt";
-	File tempTargetContigsFile;
+	File tempCandidateContigFolder ;
+	String tempCandidateContigFile;
+	File tempTargetContigsFolder;
+	String tempTargetContigFile;
 	File currentInputFile ;
 	LinkedList<String> ContigsLinkList=new LinkedList<String> ();
 	String inputFile;
 	String root="";
+	//String outputFile;
 	int nbCurrentContigs=0;
-	int l=1;
+	//int l=1;
 
-	public checkedContigs(String inputFile, String outputfile)
+	public checkedContigs(String inputFile, String outputFolder)
 			throws IOException {
-		int endIndex = inputFile.lastIndexOf("/");		
-		if (endIndex != -1)  
-		{
-			root = inputFile.substring(0, endIndex); // not forgot to put check if(endIndex != -1)
-		}
+		
+		
+		root=outputFolder + "/temp";
+	
+		
+		currentInputFile = new File(inputFile);
+		ContigsLinkList=createContigLinkList(inputFile);
+		createCandidateContigFile();
+		createTargetContigsFile() ;			
+		indexCaller();
+		alignCaller();
+		
+		/*
 		currentInputFile = new File(inputFile);
 		ContigsLinkList=createContigLinkList(inputFile);
 		
@@ -40,13 +52,91 @@ public class checkedContigs {
 		for (int loop=0;loop<nbLoops;loop++){
 			//System.out.println("loop - " + loop+"  nbCurrentContigs - " + nbCurrentContigs);
 			createCandidateContigFile();
-			createTargetContigsFile() ;
-			currentInputFile = tempTargetContigsFile;	
+			createTargetContigsFile() ;			
+			indexCaller();
+			alignCaller();
+			currentInputFile = tempTargetContigsFolder;	
 			ContigsLinkList.remove(0);
 			nbCurrentContigs--;
 		}
+		*/
+	}
+
+	private void alignCaller() throws IOException {
+																																		                     	        
+		ProcessBuilder pb = new ProcessBuilder((contigChecker.alignerPath+"/bowtie2") ,"-f" ,"--very-sensitive-local" ,"-k" ,"7" ,"-x" ,"tempTarget" ,"-U" ,(contigChecker.outputFolder+"/temp/tempCandidateContigFile.fasta") ,"-S" ,"tempTargetAlgnmnt.sam");		
+		Map<String, String> env = pb.environment();
+		// If you want clean environment, call env.clear() first
+		// env.clear()
+		env.put("VAR1", "myValue");
+		env.remove("OTHERVAR");
+		env.put("VAR2", env.get("VAR1") + "suffix");
+
+		File workingFolder = new File(root);
+		pb.directory(workingFolder);
+
+		Process proc = pb.start();
+
+		BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+		BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+
+		// read the output from the command
+		System.out.println("Here is the standard output of the command:\n");
+		String s = null;
+		while ((s = stdInput.readLine()) != null)
+		{
+			System.out.println(s);
+		}
+
+		// read any errors from the attempted command
+		System.out.println("Here is the standard error of the command (if any):\n");
+		while ((s = stdError.readLine()) != null)
+		{
+			System.out.println(s);
+		}
 		
 	}
+	
+	private void indexCaller() throws IOException {
+		
+		
+		ProcessBuilder pb = new ProcessBuilder((contigChecker.alignerPath+"/bowtie2-build"),(contigChecker.outputFolder+"/temp/tempTargetContigFile.fasta"),"tempTarget");		
+		Map<String, String> env = pb.environment();
+		// If you want clean environment, call env.clear() first
+		// env.clear()
+		env.put("VAR1", "myValue");
+		env.remove("OTHERVAR");
+		env.put("VAR2", env.get("VAR1") + "suffix");
+		
+		File workingFolder = new File(root );
+		System.out.println("workingFolder - " + workingFolder);
+		pb.directory(workingFolder);
+
+		Process proc = pb.start();
+
+		BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+
+		BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+
+		// read the output from the command
+		System.out.println("Here is the standard output of the command:\n");
+		String s = null;
+		while ((s = stdInput.readLine()) != null)
+		{
+			System.out.println(s);
+		}
+
+		// read any errors from the attempted command
+		System.out.println("Here is the standard error of the command (if any):\n");
+		while ((s = stdError.readLine()) != null)
+		{
+			System.out.println(s);
+		}
+
+	}
+
+
 
 	private LinkedList<String>  createContigLinkList(String inputFile) throws IOException{
 		BufferedReader reader = new BufferedReader(new FileReader(inputFile));
@@ -56,8 +146,7 @@ public class checkedContigs {
 	    StringBuilder sb = new StringBuilder();
 	    String mContig = reader.readLine();
 	    String mLine=reader.readLine();
-	    
-	    //System.out.println("mLine - " +mLine);	
+
 	    int c=0;
 	    while (mContig != null){
 	    	while ((mLine != null) && (!mLine.substring( 0, 1 ).equals(">"))) {
@@ -87,12 +176,12 @@ public class checkedContigs {
 	}
 
 	private void createCandidateContigFile() throws FileNotFoundException {
-		//File currentInputFile = new File(inputFile);
 		
-		tempCandidateContigFile = new File(root + "/temp" );
-		tempCandidateContigFile.mkdirs();
+		tempCandidateContigFolder = new File(root );
+		tempCandidateContigFolder.mkdirs();
+		tempCandidateContigFile=root +"/tempCandidateContigFile"+".fasta";
 		
-		try(  PrintWriter out = new PrintWriter( tempCandidateContigFile+"/tempCandidateContigFile"+l+".fasta")  ){
+		try(  PrintWriter out = new PrintWriter( tempCandidateContigFile)  ){
 		    out.println( ContigsLinkList.getFirst());
 		}		
 	}
@@ -101,12 +190,11 @@ public class checkedContigs {
 	private void createTargetContigsFile() throws FileNotFoundException {
 		
 		//tempCandidateContigFile = new File(root + "/temp" );
-		try(  PrintWriter out = new PrintWriter( root + "/temp"+"/tempTargetContigFile"+l+".fasta")  ){
-			for (int cc=1;cc<nbCurrentContigs;cc++){
+		tempTargetContigFile= root +"/tempTargetContigFile"+".fasta";
+		try(  PrintWriter out = new PrintWriter( tempTargetContigFile)  ){
+			for (int cc=0;cc<nbCurrentContigs;cc++){
 				out.println( ContigsLinkList.get(cc));
 			}
-			l++;
-		    //
 		}		
 	}
 	

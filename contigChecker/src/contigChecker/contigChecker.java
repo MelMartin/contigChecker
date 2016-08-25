@@ -9,14 +9,15 @@ public class contigChecker {
 	
 	
 	static String inputFile ="C://Users//Mel//Documents//BIOINFORMATICS//DELFT_Research//Data//SimulatedAssembly//Newbler500//454AllContigs.fna";
-	static String outputFile ="C://Users//Mel//Documents//BIOINFORMATICS//DELFT_Research//Data//SimulatedAssembly//Newbler500//contigsChecked.txt";
-
+	static String outputFolder ="C:/Users/Mel/Documents/BIOINFORMATICS/DELFT_Research/Codes/ContigChecker/outputContigCheckerTest.txt";
+	static String alignerPath="/home/nfs/mcarbajomartin/bowtie2-2.2.7";
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		if (args.length > 0) {
 				inputFile = args[0];	
-				//outputFile = args[1];
+				outputFolder = args[1];
+				alignerPath = args[2];
 				doTheSame();
 			
 		}else{
@@ -27,19 +28,15 @@ public class contigChecker {
 
 
 	private static void doTheSame() {
-		// TODO Auto-generated method stub
 		try {
-			checkedContigs cc=new checkedContigs(inputFile,outputFile);
+			checkedContigs cc=new checkedContigs(inputFile,outputFolder);
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			System.out.println("FileNotFoundException");
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
 			System.out.println("UnsupportedEncodingException");
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
