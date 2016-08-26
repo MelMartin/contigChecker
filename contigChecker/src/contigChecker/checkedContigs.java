@@ -25,26 +25,27 @@ public class checkedContigs {
 	File currentInputFile ;
 	LinkedList<String> ContigsLinkList=new LinkedList<String> ();
 	String inputFile;
-	String root="";
+	static String root="";
 	//String outputFile;
 	int nbCurrentContigs=0;
 	//int l=1;
 
 	public checkedContigs(String inputFile, String outputFolder)
 			throws IOException {
-		
-		
-		root=outputFolder + "/temp";
+		int lastIndexOf=outputFolder.lastIndexOf("/");
+		root=outputFolder.substring(0,lastIndexOf) + "/temp";
 	
-		
+		/*TEST WITHOUT LOOP (ONE SINGLE CONTIG COMBINATION)
 		currentInputFile = new File(inputFile);
 		ContigsLinkList=createContigLinkList(inputFile);
 		createCandidateContigFile();
 		createTargetContigsFile() ;			
 		indexCaller();
 		alignCaller();
+		*/
 		
-		/*
+		ContigMatrixManager cMat=new ContigMatrixManager();
+		/*CODE WITH LOOP OVER ALL CONTIG COMBINATIONS
 		currentInputFile = new File(inputFile);
 		ContigsLinkList=createContigLinkList(inputFile);
 		
