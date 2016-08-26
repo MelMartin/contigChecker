@@ -23,31 +23,43 @@ public class checkedContigs {
 	File tempTargetContigsFolder;
 	String tempTargetContigFile;
 	File currentInputFile ;
+	File alignmentFile;
 	LinkedList<String> ContigsLinkList=new LinkedList<String> ();
 	String inputFile;
 	static String root="";
 	//String outputFile;
 	int nbCurrentContigs=0;
+	SAMparser samP;
+	FileWriter fw ;
+	boolean isFirstWrite=true;
 	//int l=1;
 
 	public checkedContigs(String inputFile, String outputFolder)
 			throws IOException {
 		int lastIndexOf=outputFolder.lastIndexOf("/");
-		root=outputFolder.substring(0,lastIndexOf) + "/temp";
-	
+		root=outputFolder.substring(0,lastIndexOf) + "/tempContigs/temp";
+
 		/*TEST WITHOUT LOOP (ONE SINGLE CONTIG COMBINATION)
 		currentInputFile = new File(inputFile);
 		ContigsLinkList=createContigLinkList(inputFile);
+		alignmentFile = new File(root+"/targetAlgnmnts.sam" );
+		//alignmentFile.mkdirs();
+		
 		createCandidateContigFile();
 		createTargetContigsFile() ;			
 		indexCaller();
 		alignCaller();
-		*/
+		printToAlignmentFile();
+		* */
 		
-		ContigMatrixManager cMat=new ContigMatrixManager();
-		/*CODE WITH LOOP OVER ALL CONTIG COMBINATIONS
+		
+		/*CODE WITH LOOP OVER ALL CONTIG COMBINATIONS	* */
+		
 		currentInputFile = new File(inputFile);
 		ContigsLinkList=createContigLinkList(inputFile);
+		
+		alignmentFile = new File(root+"/targetAlgnmnts.sam" );
+		alignmentFile.mkdirs();
 		
 		int nbLoops=nbCurrentContigs-1;
 		for (int loop=0;loop<nbLoops;loop++){
@@ -56,16 +68,39 @@ public class checkedContigs {
 			createTargetContigsFile() ;			
 			indexCaller();
 			alignCaller();
+			printToAlignmentFile();
 			currentInputFile = tempTargetContigsFolder;	
 			ContigsLinkList.remove(0);
 			nbCurrentContigs--;
 		}
-		*/
+	 
 	}
 
+	private void printToAlignmentFile() {
+		
+		samP=new SAMparser(root+"/targetAlgnmnts.sam");
+		samP.printContigList();
+		
+		
+		
+		
+		try(FileWriter fw = new FileWriter(root+"/repeatedContigs.fa", true);
+			    BufferedWriter bw = new BufferedWriter(fw);
+			    PrintWriter out = new PrintWriter(bw))
+			{
+			
+			    out.println(samP.getHeader());
+				out.println(samP.printContigList());
+			    
+			} catch (IOException e) {
+			    //exception handling left as an exercise for the reader
+			}
+		
+	}
+	
 	private void alignCaller() throws IOException {
 																																		                     	        
-		ProcessBuilder pb = new ProcessBuilder((contigChecker.alignerPath+"/bowtie2") ,"-f" ,"--very-sensitive-local" ,"-k" ,"7" ,"-x" ,"tempTarget" ,"-U" ,(contigChecker.outputFolder+"/temp/tempCandidateContigFile.fasta") ,"-S" ,"tempTargetAlgnmnt.sam");		
+		ProcessBuilder pb = new ProcessBuilder((contigChecker.alignerPath+"/bowtie2") ,"-f" ,"--very-sensitive-local" ,"-k" ,"7" ,"-x" ,"tempTarget" ,"-U" ,(contigChecker.outputFolder+"/temp/tempCandidateContigFile.fasta") ,"-S" ,"targetAlgnmnts.sam");		
 		Map<String, String> env = pb.environment();
 		// If you want clean environment, call env.clear() first
 		// env.clear()
@@ -111,7 +146,7 @@ public class checkedContigs {
 		env.put("VAR2", env.get("VAR1") + "suffix");
 		
 		File workingFolder = new File(root );
-		System.out.println("workingFolder - " + workingFolder);
+		//System.out.println("workingFolder - " + workingFolder);
 		pb.directory(workingFolder);
 
 		Process proc = pb.start();
@@ -150,8 +185,7 @@ public class checkedContigs {
 
 	    int c=0;
 	    while (mContig != null){
-	    	while ((mLine != null) && (!mLine.substring( 0, 1 ).equals(">"))) {
-	    	//System.out.println("entered - " + (++nb));
+	    	while ((mLine != null) && (!mLine.substring( 0, 1 ).equals(">"))) {//reading a sequence
 	    	mContig+="\n"+mLine;    
 	    	mLine=reader.readLine();
 	    	} 
@@ -180,6 +214,7 @@ public class checkedContigs {
 		
 		tempCandidateContigFolder = new File(root );
 		tempCandidateContigFolder.mkdirs();
+		System.out.println("****Root"+root);
 		tempCandidateContigFile=root +"/tempCandidateContigFile"+".fasta";
 		
 		try(  PrintWriter out = new PrintWriter( tempCandidateContigFile)  ){

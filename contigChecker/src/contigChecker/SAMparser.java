@@ -1,6 +1,7 @@
 package contigChecker;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -9,23 +10,21 @@ import java.util.*;
 
 //WARNING this is a different class that the one with the same name in PLOEST project!!!
 public class SAMparser {
-	//int nbContigs=0;// nb of sequences in the FileHeader
+
 	Map<String, ContigData> contigsList;// Map of ContigDatas(value) and their
 										// name (key)
-	int[] readCounts;
-
-
-	List<String> contArrList;
 	int aScoreRef;
 	final int ASthresholdPERCENT = 80;//percentage of Algmt Score to set the threshold
-
+	String header;
+	
 	public SAMparser(String inputFile){
 
 		// fill the contigsList
 		contigsList = new HashMap<String, ContigData>();
 		BufferedReader br;
 		try {
-			br = new BufferedReader(new FileReader(inputFile));
+			
+			br = new BufferedReader(new FileReader(createNewFile("/tudelft.net/staff-bulk/ewi/insy/DBL/mcarbajo/SimulatedData/tempContigs/temp","targetAlgnmnts.sam")));
 			String line = br.readLine();
 			
 			//Skip header
@@ -62,28 +61,43 @@ public class SAMparser {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		header=">CONTIG_NAME"+"\t"+"CONTIG_QUERY"+"\t"+"ALGN_SC"+"\t"+"NM(EDIT_DISTANCE) "+"\t\t"+"<AS threshold: "+aScoreRef+"("+ASthresholdPERCENT+"%"+" of "+(aScoreRef*100/ASthresholdPERCENT)+" reference)>"+"\n";
 
-		
-		//System.out.println("contigsList:"+contigsList);//
-		printContigList();
 
 	}
 
+	public String getHeader(){
+		return header;
+	}
 
-
-	public void printContigList() {
-
-		System.out.println(">CONTIG_NAME"+"\t"+"CONTIG_QUERY"+"\t"+"ALGN_SC"+"\t"+"NM(EDIT_DISTANCE) "+"\t\t"+"<AS threshold: "+aScoreRef+"("+ASthresholdPERCENT+"%"+" of "+(aScoreRef*100/ASthresholdPERCENT)+" reference)>");
-
-
+	public String printContigList() {
+		
+		String outString="";
+		
 		for (Map.Entry<String, ContigData> entry : contigsList.entrySet()) {
 		  String key = entry.getKey();
 		  ContigData value = entry.getValue();
-		  System.out.println(key+"\t"+value.candidateContig+"\t"+value.getAs()+"\t"+value.getNm());
+		  outString+=key+"\t"+value.candidateContig+"\t"+value.getAs()+"\t"+value.getNm()+"\n";
 		  // do stuff
-}
-
-
+		}
+		return outString;
 	}
+	
+	private File createNewFile(String dirName,String fileName){
+
+
+		//dirName="c:\\dir1\\dir2";
+	    //fileName="fileName.txt";
+	    File file = new File(dirName + "/" + fileName);
+	    try {
+	        new File(dirName).mkdirs();   // directory created here
+	        file.createNewFile();  // file created here
+	        return file;
+	    }catch(Exception e)
+	         {
+	            System.out.println(e.getMessage());
+	            return null;
+	         }
+		}
 
 }
