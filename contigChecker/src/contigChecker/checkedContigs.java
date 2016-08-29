@@ -31,15 +31,17 @@ public class checkedContigs {
 	int nbCurrentContigs=0;
 	SAMparser samP;
 	FileWriter fw ;
-	boolean isFirstWrite=true;
+	static boolean isFirstWrite=true;
+	
 	//int l=1;
 
 	public checkedContigs(String inputFile, String outputFolder)
 			throws IOException {
 		int lastIndexOf=outputFolder.lastIndexOf("/");
 		root=outputFolder.substring(0,lastIndexOf) + "/tempContigs/temp";
-
-		/*TEST WITHOUT LOOP (ONE SINGLE CONTIG COMBINATION)
+		
+		/*
+		TEST WITHOUT LOOP (ONE SINGLE CONTIG COMBINATION)
 		currentInputFile = new File(inputFile);
 		ContigsLinkList=createContigLinkList(inputFile);
 		alignmentFile = new File(root+"/targetAlgnmnts.sam" );
@@ -50,7 +52,7 @@ public class checkedContigs {
 		indexCaller();
 		alignCaller();
 		printToAlignmentFile();
-		* */
+		*/
 		
 		
 		/*CODE WITH LOOP OVER ALL CONTIG COMBINATIONS	* */
@@ -59,7 +61,7 @@ public class checkedContigs {
 		ContigsLinkList=createContigLinkList(inputFile);
 		
 		alignmentFile = new File(root+"/targetAlgnmnts.sam" );
-		alignmentFile.mkdirs();
+		//alignmentFile.mkdirs();
 		
 		int nbLoops=nbCurrentContigs-1;
 		for (int loop=0;loop<nbLoops;loop++){
@@ -71,26 +73,35 @@ public class checkedContigs {
 			printToAlignmentFile();
 			currentInputFile = tempTargetContigsFolder;	
 			ContigsLinkList.remove(0);
-			nbCurrentContigs--;
+			nbCurrentContigs--;	
 		}
-	 
+		
 	}
 
 	private void printToAlignmentFile() {
 		
 		samP=new SAMparser(root+"/targetAlgnmnts.sam");
+		
 		samP.printContigList();
+		File repeatedContigsFile = new File(root+"/repeatedContigs.txt");
+		try{
+			repeatedContigsFile.createNewFile(); // if file already exists will do nothing 
+		}catch( IOException f){
+			
+		}
 		
-		
-		
-		
-		try(FileWriter fw = new FileWriter(root+"/repeatedContigs.fa", true);
+		try(FileWriter fw = new FileWriter(repeatedContigsFile, true);
 			    BufferedWriter bw = new BufferedWriter(fw);
 			    PrintWriter out = new PrintWriter(bw))
 			{
-			
-			    out.println(samP.getHeader());
-				out.println(samP.printContigList());
+				String outst=samP.getHeader();
+				if (outst!=null){
+					out.println(samP.getHeader());
+				}
+			    if (samP.contigsList.size()>0){
+			    	out.println(samP.printContigList());
+			    }
+				
 			    
 			} catch (IOException e) {
 			    //exception handling left as an exercise for the reader
@@ -118,19 +129,25 @@ public class checkedContigs {
 		BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
 
 		// read the output from the command
-		System.out.println("Here is the standard output of the command:\n");
 		String s = null;
+		/*System.out.println("Here is the standard output of the command:\n");
+		
 		while ((s = stdInput.readLine()) != null)
 		{
 			System.out.println(s);
 		}
-
+		 */
 		// read any errors from the attempted command
-		System.out.println("Here is the standard error of the command (if any):\n");
-		while ((s = stdError.readLine()) != null)
-		{
-			System.out.println(s);
+		s = stdError.readLine();
+		if (s != null){
+			System.out.println("Here is the standard error of the command (if any):\n");
+			while (s != null)
+			{
+				System.out.println(s);
+				s = stdError.readLine();
+			}
 		}
+		
 		
 	}
 	
@@ -156,18 +173,24 @@ public class checkedContigs {
 		BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
 
 		// read the output from the command
-		System.out.println("Here is the standard output of the command:\n");
 		String s = null;
+		/*
+		System.out.println("Here is the standard output of the command:\n");
+		
 		while ((s = stdInput.readLine()) != null)
 		{
 			System.out.println(s);
 		}
-
+		 */
 		// read any errors from the attempted command
-		System.out.println("Here is the standard error of the command (if any):\n");
-		while ((s = stdError.readLine()) != null)
-		{
-			System.out.println(s);
+		s = stdError.readLine();
+		if (s != null){
+			System.out.println("Here is the standard error of the command (if any):\n");
+			while (s != null)
+			{
+				System.out.println(s);
+				s = stdError.readLine();
+			}
 		}
 
 	}
@@ -214,7 +237,7 @@ public class checkedContigs {
 		
 		tempCandidateContigFolder = new File(root );
 		tempCandidateContigFolder.mkdirs();
-		System.out.println("****Root"+root);
+		//System.out.println("****Root"+root);
 		tempCandidateContigFile=root +"/tempCandidateContigFile"+".fasta";
 		
 		try(  PrintWriter out = new PrintWriter( tempCandidateContigFile)  ){
